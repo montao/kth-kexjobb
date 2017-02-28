@@ -1,7 +1,0 @@
-Learn difference between verification and testing
-
-Choose (1) USB in general and its theory (2) ALU as a peripheral and how to verify an ALU, distinct from testing it which we already did in Quartus
-
-Examine the different proof techniques (1) Proof that covers all possible cases (2) Inductive proof
-
-Make a time plan like a flow chart (waterfall) which steps should be performed in which order
