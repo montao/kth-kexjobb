@@ -1,0 +1,8 @@
+MODULE main
+VAR
+  state : {a, b};
+ASSIGN
+  init(state) := a;
+  next(state) := b;
+SPEC
+  !EX((state = b) -> (state = a))
