@@ -34,8 +34,8 @@ ASSIGN
 	next (Bit1) :=
 		case
 		-- To Do 
-			Bit1 = FALSE : Bit1;
-			TRUE : Bit1;
+			Bit1 = FALSE : Bit2;
+			TRUE : Bit2;
 		esac;
 	next (Bit2) :=
 		case
