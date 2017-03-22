@@ -19,10 +19,16 @@ VAR
 IVAR
 -- system inputs
 	input : boolean;
+	load : {0,1};
 ASSIGN
+	init(location) := idle;
 	init (state) := s1;
 	init (Bit1) := FALSE;
 	init (Bit2) := FALSE;
+	next (location) := case
+		(location = idle & load = 1)  : start; -- if state is idle then next state is start
+		TRUE : location; -- why?
+		esac;
 	next (state) :=
 		case
 			state = s1 & input = TRUE : s2;
