@@ -21,6 +21,7 @@ ASSIGN
 	init (state) := idle;
 	init (send) := TRUE;
 	init (nextbit) := TRUE;
+	init (count10) := 1;
 	next (state) :=
 		case
 			state = idle & send : start; -- if state is idle and load=1 then next state is start
