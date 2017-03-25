@@ -11,7 +11,8 @@ VAR
 	busy : boolean;
 	resetcounter : boolean;
 	resettimer : boolean;
-	count10 : 0 .. 9;
+	count10 : boolean;
+	nextbit : boolean;
 IVAR
 -- system inputs
 	input : boolean;
@@ -21,7 +22,8 @@ ASSIGN
 		case
 			(state = idle) & (send) : load; -- if state is idle and load=1 then next state is start
 			(state = load) & (busy) : data; --if state is start then next state is data
-			state = shift : shift;		
+			state = data & nextbit : shift;	
+			state = shift & !count10 : data;		
 			TRUE : state; -- if conditions fail, then do not change state
 		esac;
 	next (send) :=
