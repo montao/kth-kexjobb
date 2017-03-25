@@ -19,13 +19,17 @@ IVAR
 	input : boolean;
 ASSIGN
 	init (state) := idle;
+	init (send) := TRUE;
+	init (nextbit) := TRUE;
 	next (state) :=
 		case
-			(state = idle) & (send) : start; -- if state is idle and load=1 then next state is start
-			(state = start) & send : data; --if state is start then next state is data
+			state = idle & send : start; -- if state is idle and load=1 then next state is start
+			state = start & send : data; --if state is start then next state is data
 			state = start & nextbit : shift;
+			state = data & ! nextbit : data;
 			state = shift & count10 < 10: data;
 			state = shift & count10 >= 10: wait;
+			state = wait : idle;
 			TRUE : state; -- if conditions fail, then do not change state
 		esac;
 		
@@ -46,3 +50,9 @@ ASSIGN
 			(state = shift) & (count10 < 10): count10 +1;
 			TRUE : count10; -- otherwise, goto waiting state
 		esac;		
+
+	next (nextbit) :=
+		case
+			(state = shift) & (count10 < 10): FALSE;
+			TRUE : TRUE; -- otherwise, goto waiting state
+		esac;	
