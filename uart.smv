@@ -14,9 +14,9 @@ VAR
 	resettimer : boolean;
 	count10 : 1 .. 10;
 	nextbit : boolean;
-IVAR
+--IVAR
 -- system inputs
-	input : boolean;
+	--input : boolean;
 ASSIGN
 	init (state) := idle;
 	init (send) := TRUE;
@@ -57,3 +57,21 @@ ASSIGN
 			(state = shift) & (count10 < 10) : FALSE;
 			TRUE : TRUE; -- otherwise, goto waiting state
 		esac;	
+	
+	next (busy) :=
+		case
+			(state = start) : TRUE;
+			TRUE : TRUE; -- otherwise, goto waiting state
+		esac;	
+		
+	next (resetcounter) :=
+		case
+			(state = shift) : TRUE;
+			TRUE : TRUE; -- otherwise, goto waiting state
+		esac;
+		
+	next (resettimer) :=
+		case
+			(state = shift) : TRUE;
+			TRUE : TRUE; -- otherwise, goto waiting state
+		esac;		
