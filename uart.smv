@@ -3,6 +3,11 @@ MODULE main
 -- ACTIVITIES
 -- 1. Fill in the smv definitions
 -- 2. Then run this file in interactive mode to see the states
+--
+--
+--
+--
+--
 VAR
 -- system outputs
 -- the model has states: idle, start, data, shift and wait
@@ -14,24 +19,22 @@ VAR
 	resettimer : boolean;
 	count10 : 1 .. 10;
 	nextbit : boolean;
---IVAR
--- system inputs
-	--input : boolean;
 ASSIGN
 	init (state) := idle;
 	init (send) := TRUE;
 	init (nextbit) := TRUE;
 	init (count10) := 1;
 	init (load) := FALSE;
-	init  (busy) := FALSE ; 
+	init (busy) := FALSE;
 	init (resetcounter) := FALSE;
-	init  (resettimer) := FALSE;
+	init (resettimer) := FALSE;
 	next (state) :=
 		case
 			state = idle & send : start; -- if state is idle and load=1 then next state is start
 			state = start & send : data; --if state is start then next state is data
 			state = start & nextbit : shift;
 			state = data & ! nextbit : data;
+			state = data & nextbit : shift;
 			state = shift & count10 < 10 : data;
 			state = shift & count10 >= 10 : wait;
 			state = wait : idle;
@@ -56,20 +59,17 @@ ASSIGN
 		case
 			(state = shift) & (count10 < 10) : FALSE;
 			TRUE : TRUE; -- otherwise, goto waiting state
-		esac;	
-	
+		esac;
 	next (busy) :=
 		case
 			(state = start) : TRUE;
 			TRUE : TRUE; -- otherwise, goto waiting state
-		esac;	
-		
+		esac;
 	next (resetcounter) :=
 		case
 			(state = shift) : TRUE;
 			TRUE : TRUE; -- otherwise, goto waiting state
 		esac;
-		
 	next (resettimer) :=
 		case
 			(state = shift) : TRUE;
