@@ -3,11 +3,13 @@ MODULE main
 -- ACTIVITIES
 -- 1. Fill in the smv definitions
 -- 2. Then run this file in interactive mode to see the states
---
---
---
---
---
+--$ NuSmV -int
+--NuSMV > read_model -i uart.smv
+--NuSMV > flatten_hierarchy
+--NuSMV > encode_variables
+--NuSMV > build_model
+--NuSMV > pick_state -i
+-- NuSMV > simulate -i -k 15
 VAR
 -- system outputs
 -- the model has states: idle, start, data, shift and wait
