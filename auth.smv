@@ -1,0 +1,12 @@
+MODULE main
+VAR
+	stateA : {idle, send, reeceive, authenticated};
+	stateB : {idle, send, reeceive, authenticated};
+	XcounterF : 0 .. 255;
+	YcounterE : 0 .. 255;
+	Ssend_KabA : 0 .. 255;
+	Breceive_KabA : 0 .. 255;
+	Areceive_KabS : 0 .. 255;
+	Abegin_initB : 0 .. 255;
+	Bend_resA : 0 .. 255;
+SPEC AG (Abegin_initB >= Bend_resA)
