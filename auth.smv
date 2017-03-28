@@ -3,15 +3,9 @@ MODULE main
 VAR
 	stateA : {idle, send1, receive1, send2, receive2, send3, receive3};
 	stateB : {idle, send1, receive1};
-	stateS : {idle, send, receive};
+	stateS : {idle, send1, receive1};
+	stateT : {idle, send1, receive1};
 	stateI : {idle, eavesdrop, remove, store, send};
-	XcounterF : 0 .. 255;
-	YcounterE : 0 .. 255;
-	Ssend_KabA : 0 .. 255; --number of times S sent keys to A
-	Breceive_KabA : 0 .. 255; -- number of times B received keys from A
-	Areceive_KabS : 0 .. 255; --number of times A received keys from S
-	Abegin_initB : 0 .. 255; --number of times A started request
-	Bend_respA : 0 .. 255; -- number of times B ended responses with A
 	c_as_count_s : 0 .. 255;
 	c_as_count_r : 0 .. 255;
 	c_tgs_count_s : 0 .. 255;
@@ -43,8 +37,9 @@ ASSIGN
 	init (v_count_r) := 0;
 	next (stateA) :=
 		case
-			stateS = send : send2;
+			stateS = send1 : receive1;
 			stateB = send1 : receive3;
+			stateA = receive1 : send2;
 			TRUE : stateA;
 		esac;
 	next (c_as_count_s) :=
@@ -52,9 +47,19 @@ ASSIGN
 			stateA = send1 & c_as_count_s < 254 : c_as_count_s + 1;
 			TRUE : c_as_count_s;
 		esac;
+	next (c_tgs_count_s) :=
+		case
+			stateA = send2 & c_tgs_count_s < 254 : c_tgs_count_s + 1;
+			TRUE : c_tgs_count_s;
+		esac;
+	next (as_count_s) :=
+		case
+			stateS = send1 & as_count_s < 254 : as_count_s + 1;
+			TRUE : as_count_s;
+		esac;
 	next (c_as_count_r) :=
 		case
-			stateS = receive1 & c_as_count_r < 254 : c_as_count_r + 1;
+			stateA = receive1 & c_as_count_r < 254 : c_as_count_r + 1;
 			TRUE : c_as_count_r;
 		esac;
 	next (stateB) :=
@@ -64,12 +69,6 @@ ASSIGN
 		esac;
 	next (stateS) :=
 		case
-			stateS = receive : send;
+			stateS = receive1 : send1;
 			TRUE : stateS;
 		esac;
-	next (Ssend_KabA) :=
-		case
-			(stateS = send) & (Ssend_KabA < 255) : Ssend_KabA + 1;
-			TRUE : Ssend_KabA;
-		esac;
-SPEC AG (Abegin_initB >= Bend_respA)
