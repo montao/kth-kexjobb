@@ -22,6 +22,7 @@ ASSIGN
 	init (stateA) := send1; --start by sending to S
 	init (stateB) := idle;
 	init (stateS) := idle;
+	init (stateT) := idle;
 	init (stateI) := idle; --initial states are idle
 	init (c_as_count_s) := 0;
 	init (c_as_count_r) := 0;
@@ -35,17 +36,60 @@ ASSIGN
 	init (tgs_count_r) := 0;
 	init (v_count_s) := 0;
 	init (v_count_r) := 0;
+	next (stateB) :=
+		case
+			stateA = send3 : receive1;
+			stateB = receive1 : send1;
+			TRUE : stateB;
+		esac;
 	next (stateA) :=
 		case
 			stateS = send1 : receive1;
 			stateB = send1 : receive3;
 			stateA = receive1 : send2;
+			stateT = receive2 : send3;
 			TRUE : stateA;
+		esac;
+	next (stateT) :=
+		case
+			stateA = send2 : receive1;
+			stateT = receive1 : send1;
+			TRUE : stateT;
+		esac;
+	next (v_count_s) :=
+		case
+			stateB = send1 & v_count_s < 254 : v_count_s + 1;
+			TRUE : v_count_s;
+		esac;
+	next (v_count_r) :=
+		case
+			stateB = receive1 & v_count_r < 254 : v_count_r + 1;
+			TRUE : v_count_r;
+		esac;
+	next (c_v_count_s) :=
+		case
+			stateA = send3 & c_v_count_s < 254 : c_v_count_s + 1;
+			TRUE : c_v_count_s;
+		esac;
+	next (c_v_count_r) :=
+		case
+			stateA = receive3 & c_v_count_r < 254 : c_v_count_r + 1;
+			TRUE : c_v_count_r;
 		esac;
 	next (c_as_count_s) :=
 		case
 			stateA = send1 & c_as_count_s < 254 : c_as_count_s + 1;
 			TRUE : c_as_count_s;
+		esac;
+	next (tgs_count_r) :=
+		case
+			stateT = receive1 & tgs_count_r < 254 : tgs_count_r + 1;
+			TRUE : tgs_count_r;
+		esac;
+	next (tgs_count_s) :=
+		case
+			stateT = send1 & tgs_count_s < 254 : tgs_count_s + 1;
+			TRUE : tgs_count_s;
 		esac;
 	next (c_tgs_count_s) :=
 		case
@@ -62,13 +106,10 @@ ASSIGN
 			stateA = receive1 & c_as_count_r < 254 : c_as_count_r + 1;
 			TRUE : c_as_count_r;
 		esac;
-	next (stateB) :=
-		case
-			stateA = send2 : send1;
-			TRUE : stateB;
-		esac;
 	next (stateS) :=
 		case
 			stateS = receive1 : send1;
 			TRUE : stateS;
 		esac;
+SPEC AG (stateB = receive3 -> c_as_count_s = as_count_r)
+SPEC AG (stateB = receive3 -> as_count_s = c_as_count_r)
