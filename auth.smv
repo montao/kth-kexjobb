@@ -134,5 +134,5 @@ ASSIGN
 			stateS = send1 & as_count_r < 254 : as_count_r + 1;
 			TRUE : 0 + as_count_r;
 		esac;
-SPEC AG (stateB = receive3 -> c_as_count_s = as_count_r)
-SPEC AG (stateB = receive3 -> as_count_s = c_as_count_r)
+SPEC AG (stateB = send1 -> c_as_count_s = as_count_r)
+SPEC AG (stateA = receive3 -> as_count_s = c_as_count_r)
