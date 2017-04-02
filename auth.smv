@@ -8,6 +8,7 @@
 --NuSMV > build_model
 --NuSMV > pick_state -i
 -- NuSMV > simulate -i -k 15
+
 MODULE main
 VAR
 	stateA : {idle, send1, receive1, send2, receive2, send3, receive3};
