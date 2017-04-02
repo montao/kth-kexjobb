@@ -48,39 +48,41 @@ ASSIGN
 	init (v_count_r) := 0;
 	next (stateA) :=
 		case
-			stateS = send1 : receive1;
+			stateS = send1 : send2;
 			stateB = send1 : receive3;
-			stateA = receive1 : send2;
-			stateT = receive2 : send3;
+			--stateA = receive1 : send2;
+			stateT = send1 : send3;
+			--stateT = receive2 : send3;
+			--stateA = idle : send1;
 			TRUE : idle;
 		esac;
 	next (stateB) :=
 		case
-			stateA = send3 : receive1;
-			stateB = receive1 : send1;
+			stateA = send3 : send1;
+			--stateB = receive1 : send1;
 			TRUE : idle;
 		esac;
 	next (stateS) :=
 		case
-			stateA = send1 : receive1;
-			stateS = receive1 : send1;
+			stateA = send1 : send1;
+			--stateS = receive1 : send1;
 			TRUE : idle;
 		esac;
 	next (stateT) :=
 		case
-			stateA = send2 : receive1;
-			stateT = receive1 : send1;
+			stateA = send2 : send1;
+			--stateT = receive1 : send1;
 			TRUE : idle;
 		esac;
 	next (v_count_s) :=
 		case
 			stateB = send1 & v_count_s < 254 : v_count_s + 1;
 			TRUE : 0 + v_count_s;
-		esac;
+		esac;	
 	next (v_count_r) :=
 		case
-			stateB = receive1 & v_count_r < 254 : v_count_r + 1;
-			TRUE : 0 + v_count_r;
+			stateB = send1 & v_count_r < 254 : v_count_r + 1;
+			TRUE : 0 + v_count_r;   
 		esac;
 	next (c_v_count_s) :=
 		case
@@ -99,7 +101,7 @@ ASSIGN
 		esac;
 	next (tgs_count_r) :=
 		case
-			stateT = receive1 & tgs_count_r < 254 : tgs_count_r + 1;
+			stateT = send1 & tgs_count_r < 254 : tgs_count_r + 1;
 			TRUE : 0 + tgs_count_r;
 		esac;
 	next (tgs_count_s) :=
@@ -114,7 +116,7 @@ ASSIGN
 		esac;
 	next (c_tgs_count_r) :=
 		case
-			stateA = receive2 & c_tgs_count_r < 254 : c_tgs_count_r + 1;
+			stateA = send2 & c_tgs_count_r < 254 : c_tgs_count_r + 1;
 			TRUE : 0 + c_tgs_count_r;
 		esac;
 	next (as_count_s) :=
@@ -124,12 +126,12 @@ ASSIGN
 		esac;
 	next (c_as_count_r) :=
 		case
-			stateA = receive1 & c_as_count_r < 254 : c_as_count_r + 1;
+			stateA = send2 & c_as_count_r < 254 : c_as_count_r + 1;
 			TRUE : 0 + c_as_count_r;
 		esac;
 	next (as_count_r) :=
 		case
-			stateA = receive1 & as_count_r < 254 : as_count_r + 1;
+			stateS = send1 & as_count_r < 254 : as_count_r + 1;
 			TRUE : 0 + as_count_r;
 		esac;
 SPEC AG (stateB = receive3 -> c_as_count_s = as_count_r)
