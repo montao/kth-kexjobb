@@ -13,10 +13,10 @@ MODULE uart
 --NuSMV > pick_state -i
 -- NuSMV > simulate -i -k 15
 VAR
--- system outputs
--- the model has states: idle, start, data, shift and wait
 	Tx : data;
 	Rx : data;
+	output : data;
+	input : data;
 ASSIGN
 	init (Tx) := 0;
 	init (Rx) := 0;
