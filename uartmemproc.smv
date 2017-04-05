@@ -41,14 +41,15 @@ ASSIGN
 MODULE x (data)
 ASSIGN
 	data := data;
+MODULE run (data)
+ASSIGN
+	data := data;
 MODULE main
 VAR
-	uart_var : uart;
-	mem_var : mem;
-	proc_var : proc (uart_var, mem_var);
-	write_var : write;
+	uart_uvar : uart;
+	mem_mvar : mem;
+	proc_mvar : proc (uvar, mvar);
+	write_var2 : write(mvar.k);
 	data : write(mem_var);
-	SPEC AG (proc_var.out != data);
---mem_var.k)	
-	 
-	--->    AG     ( mem_var.k  =  ( x(mem_var.k)   )     )
+	data2 : run(mvar.k );
+	SPEC AG (proc_var.out != data) -> AG mem_var.k = data2;
