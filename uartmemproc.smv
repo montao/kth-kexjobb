@@ -13,6 +13,7 @@ MODULE uart
 --NuSMV > build_model
 --NuSMV > pick_state -i
 -- NuSMV > simulate -i -k 15
+-- oneliner reset; read_model -i uart.smv; go; pick_state -iv ; simulate -iv -k 15
 VAR
 	Tx : data;
 	Rx : data;
@@ -21,23 +22,23 @@ VAR
 ASSIGN
 	init (Tx.data) := 0;
 	init (Rx.data) := 0;
-MODULE proc
+MODULE proc(uart, mem)
 VAR
-	out : data;
+	output : data;
+	input : data;
 MODULE mem
 VAR
 	k : data;
 ASSIGN
 	init (k.data) := 22;
 	next (k.data) :=
-		case			
+		case
 			TRUE : k.data;
 		esac;
 MODULE main
 VAR
 	uart_var : uart;
 	mem_var : mem;
-	proc_var : proc;
---SPEC AG (proc_var.out != write k) ->     AG   (     mem_var.k     =     (   x
-  --  mem_var.k 
-	-- )   )
+	proc_var : proc(uart_var, mem_var);
+--SPEC AG (proc_var.out != write ( k ) ) ->    AG     ( mem_var.k       =       (
+ --   x    mem_var.k   )     )
