@@ -13,7 +13,7 @@ MODULE uart
 --NuSMV > build_model
 --NuSMV > pick_state -i
 -- NuSMV > simulate -i -k 15
--- oneliner reset; read_model -i uart.smv; go; pick_state -iv ; simulate -iv -k 15
+-- The oneliner reset; read_model -i uart.smv; go; pick_state -iv ; simulate -iv -k 15
 VAR
 	Tx : data;
 	Rx : data;
@@ -52,4 +52,4 @@ VAR
 	write_var2 : write(mvar.k);
 	data : write(mem_var);
 	data2 : run(mvar.k );
-	SPEC AG (proc_var.out != data) -> AG mem_var.k = data2;
+	SPEC AG proc_var.out != data -> AG mem_var.k = data2;
