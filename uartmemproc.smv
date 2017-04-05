@@ -22,7 +22,7 @@ VAR
 ASSIGN
 	init (Tx.data) := 0;
 	init (Rx.data) := 0;
-MODULE proc(uart, mem)
+MODULE proc (uart, mem)
 VAR
 	output : data;
 	input : data;
@@ -30,15 +30,25 @@ MODULE mem
 VAR
 	k : data;
 ASSIGN
-	init (k.data) := 22;
+	init (k.data) := 22; --whatever should stay the same
 	next (k.data) :=
 		case
 			TRUE : k.data;
 		esac;
+MODULE write (data)
+ASSIGN
+	data := 0;
+MODULE x (data)
+ASSIGN
+	data := data;
 MODULE main
 VAR
 	uart_var : uart;
 	mem_var : mem;
-	proc_var : proc(uart_var, mem_var);
---SPEC AG (proc_var.out != write ( k ) ) ->    AG     ( mem_var.k       =       (
- --   x    mem_var.k   )     )
+	proc_var : proc (uart_var, mem_var);
+	write_var : write;
+	data : write(mem_var);
+	SPEC AG (proc_var.out != data);
+--mem_var.k)	
+	 
+	--->    AG     ( mem_var.k  =  ( x(mem_var.k)   )     )
