@@ -1,24 +1,29 @@
 
-MODULE MEM (K)
---- should be three models: Memory, Process and UART
+MODULE UART
 VAR
--- system output
-	proc : {idle, read, write};
+	state : {idle, receive, transmit};
+	mem : array 0 .. 31 of 0 .. 31;
 IVAR
 -- system inputs
-	K : 0 .. 254;
-MODULE main
---- should be three models: Memory, Process and UART
+	Rx : array 0 .. 31 of 0 .. 31;
+MODULE MEM
 VAR
--- system output	
-	proc : {idle, read, write};
-	K : boolean;
-	old-K : boolean;
-	write-K : {idle, read, write};
+-- main memory
+	mem : array 0 .. 31 of 0 .. 31;
+	K : 0 .. 254;
+	old-K : 0 .. 254;
+
+MODULE main
+VAR
+-- system state	
+--memory : MEM;
+	memory : MEM;
+	proc : {idle, read, write, write-K};
 ASSIGN
 	init (proc) := read;
 	next (proc) :=
 		case
+			proc = read : idle;
 			TRUE : proc;
 		esac;
-LTLSPEC G proc != write-K -> old-K = K
+LTLSPEC G proc != write-K -> memory.old-K = memory.K
