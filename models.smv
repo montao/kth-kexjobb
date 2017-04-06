@@ -1,15 +1,14 @@
-
 MODULE UART
 VAR
 	state : {idle, receive, transmit};
 	Rx : 0 .. 31;
 	Tx : 0 .. 31;
-	--IVAR
-	-- system inputs
+--IVAR
+-- system inputs
 
-MODULE MEM
+MODULE MEM(proc)
 VAR
--- main memory
+-- main memory data
 	K : 0 .. 31;
 	old-K : 0 .. 31;
 ASSIGN
@@ -17,20 +16,18 @@ ASSIGN
 	init (old-K) := 22;
 	next (K) :=
 		case
-			K = 21 : 12;
+			proc = write-K : 00; --this should never occur
 			TRUE : K;
 		esac;
 	next (old-K) :=
-		case
-			K = 21 : K;
+		case			
 			TRUE : K;
 		esac;
 MODULE main
 VAR
 -- system state	
---memory : MEM;
-	memory : MEM;
 	proc : {idle, read, write, write-K};
+	memory : MEM(proc);
 ASSIGN
 	init (proc) := read;
 	next (proc) :=
