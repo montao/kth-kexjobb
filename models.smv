@@ -2,21 +2,27 @@
 MODULE UART
 VAR
 	state : {idle, receive, transmit};
-	Rx : array 0 .. 31 of 0 .. 31;
-	Tx : array 0 .. 31 of 0 .. 31;
---IVAR
--- system inputs
+	Rx : 0 .. 31;
+	Tx : 0 .. 31;
+	--IVAR
+	-- system inputs
+
 MODULE MEM
 VAR
 -- main memory
-	K : 0 .. 254;
-	old-K : 0 .. 254;
+	K : 0 .. 31;
+	old-K : 0 .. 31;
 ASSIGN
-	init (K) := 42;
-	init (old-K) := 42;
+	init (K) := 22;
+	init (old-K) := 22;
 	next (K) :=
 		case
-			K = 32:12;
+			K = 21 : 12;
+			TRUE : K;
+		esac;
+	next (old-K) :=
+		case
+			K = 21 : K;
 			TRUE : K;
 		esac;
 MODULE main
@@ -32,4 +38,4 @@ ASSIGN
 			proc = read : idle;
 			TRUE : proc;
 		esac;
-LTLSPEC G (proc != write-K) -> G (memory.K=memory.old-K)
+LTLSPEC G (proc != write-K) -> G (memory.K = memory.old-K)
