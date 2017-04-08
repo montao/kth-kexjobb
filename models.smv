@@ -1,9 +1,16 @@
 
-MODULE UART (read, write)
+MODULE UART (input, output)
 VAR
 	state : {idle, receive, transmit};
 	Rx : unsigned word [ 8 ]; --vector of bytes
 	Tx : unsigned word [ 8 ];
+ASSIGN
+
+next (Rx) :=
+	case
+		TRUE : input[0][0];
+	esac;
+	
 MODULE MEM (read, write)
 VAR
 -- main memory data
