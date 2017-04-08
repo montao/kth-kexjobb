@@ -1,4 +1,4 @@
-MODULE UART (output, input)
+MODULE UART (proc, output, input)
 VAR
     state : {idle, receive, transmit};
     Rx : unsigned word [ 8 ]; --vector of bytes
@@ -6,34 +6,38 @@ VAR
 ASSIGN
     next (Rx) :=
         case            
-            TRUE : input;
+            proc = read : input;
+            TRUE : (Rx);
         esac;
     next (Tx) :=
         case            
-            TRUE : output;
+            proc = write : output;
+            TRUE : (Tx);
         esac;
 
-MODULE MEM (read, write)
+TRANS
+    proc != read -> next(Rx) = Rx;
+
+MODULE MEM (proc, input, output)
 VAR
--- main memory data
-    K : unsigned word [ 8 ]; -- The secret data
-    data : array 0 .. 7 of array 0 .. 7 of unsigned word [ 8 ]; -- The datastore
+    K : unsigned word [ 8 ]; 
+    data : array 0 .. 7 of array 0 .. 7 of unsigned word [ 8 ];
 ASSIGN
-    init (data[1][0]) := K; --K is a word in the datastore at data[1][0]
+    init (data[1][0]) := K; 
     next (K) :=
         case
-            write = data[1][0] : write;
+            output = data[1][0] : output;
             TRUE : K;
         esac;
 MODULE main
 VAR
--- system state 
-    read : unsigned word [ 8 ]; --read data
-    write : unsigned word [ 8 ]; --write data
-    memory : MEM (read, write); --model instance
-    uart0 : UART (read, write); --model instance
+	proc : {idle, read, write};
+    input : unsigned word [ 8 ]; 
+    output : unsigned word [ 8 ]; 
+    memory : MEM (proc, input, output); 
+    uart0 : UART (proc, input, output); 
 ASSIGN
-    init (read) := memory.data[0][0];
-    init (write) := memory.data[0][0];
+    init (input) := memory.data[0][0];
+    init (output) := memory.data[0][0];
 
-LTLSPEC G (write != memory.data[1][0]) -> memory.K = next (memory.K)
+LTLSPEC G (output != memory.data[1][0]) -> G (memory.K = next (memory.K))
