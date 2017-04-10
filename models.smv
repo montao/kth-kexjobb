@@ -1,29 +1,23 @@
 
 MODULE UART (proc, output, input)
-VAR
-	state : {idle, receive, transmit};
+VAR	state : {idle, receive, transmit};
 	Rx : unsigned word [ 8 ]; --vector of bytes
 	Tx : unsigned word [ 8 ];
 ASSIGN
 	next (Rx) :=
 		case
-			proc = read : input;
-			TRUE : (Rx);
+			proc = read : input; proc = write : output; TRUE : (Rx);
 		esac;
 	next (Tx) :=
 		case
-			proc = write : output;
-			TRUE : (Tx);
+			proc = write : output; proc = read : input; TRUE : (Tx);
 		esac;
+			
+		
 	next (state) :=
 		case
-			proc = write : receive;
-			proc = read : transmit;
-			TRUE : (state);
+			proc = write : receive;	proc = read : transmit;	TRUE : idle;
 		esac;
-TRANS
-	proc != read -> next (Rx) = Rx;
-
 MODULE MEM (proc, input, output)
 VAR K : unsigned word [ 8 ]; data : array 0 .. 7 of array 0 .. 7 of unsigned word [ 8 ];
 ASSIGN
@@ -34,14 +28,9 @@ ASSIGN
             TRUE : K;
         esac;
 MODULE main
-VAR
-	proc : {idle, read, write};
-    input : unsigned word [ 8 ]; 
+VAR	proc : {idle, read, write}; input : unsigned word [ 8 ]; 
     output : unsigned word [ 8 ]; 
     memory : MEM (proc, input, output); 
     uart0 : UART (proc, input, output); 
-ASSIGN
-    init (input) := memory.data[0][0];
-    init (output) := memory.data[0][0];
-
+ASSIGN init (input) := memory.data[0][0]; init (output) := memory.data[0][0];
 LTLSPEC G (output != memory.data[1][0]) -> G (memory.K = next (memory.K))
