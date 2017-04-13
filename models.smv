@@ -31,7 +31,7 @@ ASSIGN
 		esac;
 	next (Tx[5]) :=
 		case
-			proc = write2UART & proc2UARTAddress = 05 : proc2UARTvalue;
+			proc = write2UART & proc2UARTAddress = 5 : proc2UARTvalue;
 			TRUE : (Tx[5]);
 		esac;
 	next (Tx[6]) :=
