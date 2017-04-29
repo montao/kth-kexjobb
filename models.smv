@@ -69,13 +69,13 @@ ASSIGN
 	next (data[0]) :=
 		case
 			proc = write & proc2memAddress = 0 : proc2memValue;
-			proc = setDMAaddress & DMAadress = 0 : uart2memValue;
+			DMAadress = 0 : uart2memValue;
 			TRUE : data[0];
 		esac;
 	next (data[1]) :=
 		case
 			proc = write & proc2memAddress = 1 : proc2memValue;
-			proc = setDMAaddress & DMAadress = 1 : uart2memValue;
+			DMAadress = 1 : uart2memValue;
 			TRUE : data[1];
 		esac;
 	next (data[2]) :=
