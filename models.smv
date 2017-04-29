@@ -4,6 +4,7 @@ VAR
 	Rx : unsigned word [ 64 ]; -- receive from outside
 	Tx : array 0 .. 7 of unsigned word [ 64 ]; --array of bytes
 	UART2DMA : unsigned word [ 64 ];
+	
 ASSIGN
 	init(UART2DMA) := 0ud64_31;
 	next (Tx[0]) :=
