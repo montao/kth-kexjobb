@@ -118,3 +118,6 @@ VAR
 ASSIGN
 	LTLSPEC G ! (proc = write & proc2memAddress = 1) -> G (memory.data[1] = next
 	(memory.data[1]))
+	
+	LTLSPEC G (proc = write2UART) -> F ( uart0.proc2UARTAddress = proc2UARTAddress  )
+	
