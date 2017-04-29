@@ -141,10 +141,6 @@ VAR
 	
 ASSIGN
 	
-	init(proc) := setDMAaddress;
-	init(proc2memAddress) := 2;
-	init(DMAmemAddress) := 2;
-	
 	LTLSPEC G (proc = write2UART & proc2UARTAddress = 0) -> F ( next(uart0.Tx[0]) = proc2UARTvalue  )
 		
 	LTLSPEC G (proc != write & proc2memAddress != 1 & DMAmemAddress != 1) -> G (memory.data[1] = next(memory.data[1]))
