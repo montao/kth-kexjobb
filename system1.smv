@@ -93,4 +93,8 @@ VAR
 	
 ASSIGN
 		
+	--if we write to the UART then after a while it will appear on Tx
+	LTLSPEC G (proc = write2UART & proc2UARTAddress = 0) -> F ( next(uart0.Tx[0]) = proc2UARTvalue  )
+	
+	-- if we write to the UART but not to the secure memory, then the secure memory is constant
 	LTLSPEC G (proc = write2UART & proc2memAddress != memory.secureAddress) -> G (memory.data[memory.secureAddress] = next(memory.data[memory.secureAddress]))	
