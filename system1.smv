@@ -52,13 +52,13 @@ ASSIGN
 		esac;
 
 		-- memory model
-	-- the secure address is address 267 
+	-- the secure address is address 513 
 
 MODULE MEM (proc, proc2memValue, proc2memAddress, mem2proc, uart2memValue)
 DEFINE
-	secureAddress := 1032;
+	secureAddress := 513;
 VAR
-	data : array 0 .. 2047 of unsigned word [ 8 ]; -- 2 kilobyte memory
+	data : array 0 .. 1023 of unsigned word [ 8 ]; -- 2 kilobyte memory
 ASSIGN
 	next (mem2proc) :=
 		case
@@ -67,15 +67,15 @@ ASSIGN
 		esac;
 	next (data[secureAddress]) :=
 		case
-			proc = write & proc2memAddress = proc2memAddress : proc2memValue;
+			proc = write & proc2memAddress = secureAddress : proc2memValue;
 			TRUE : data[secureAddress];
 		esac;
 MODULE main
 VAR
 	proc : {idle, read, write, read2UART, write2UART, setDMAaddress};
 	-- addresses are array indices
-	proc2memAddress : 0 .. 2047;
-	proc2UARTAddress : 0 .. 2047;
+	proc2memAddress : 0 .. 1023;
+	proc2UARTAddress : 0 .. 1023;
 	-- data is array of words
 	mem2proc : unsigned word [ 8 ];
 	proc2memValue : unsigned word [ 8 ]; -- the data the CPU writes to memory
@@ -91,5 +91,5 @@ ASSIGN
 	LTLSPEC G (proc = write2UART & proc2UARTAddress = 0) -> F (next (uart0.Tx[0]) =
 	proc2UARTvalue)
 	-- if we write to the UART but not to the secure memory, then the secure memory is constant
-	LTLSPEC G (proc = write2UART & proc2memAddress != memory.secureAddress) -> G
+	LTLSPEC G (proc2memAddress != memory.secureAddress) -> G
 	(memory.data[memory.secureAddress] = next (memory.data[memory.secureAddress]))	

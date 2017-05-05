@@ -52,6 +52,8 @@ ASSIGN
 		esac;
 MODULE MEM (proc, proc2memValue, proc2memAddress, mem2proc, uart2memValue,
 DMAadress)
+DEFINE
+	secureAddress := 1032;
 VAR
 	data : array 0 .. 2047 of unsigned word [ 8 ];
 ASSIGN
@@ -73,11 +75,11 @@ ASSIGN
 			DMAadress = 0 : uart2memValue;
 			TRUE : data[0];
 		esac;
-	next (data[42]) :=
+	next (data[secureAddress]) :=
 		case
-			proc = write & proc2memAddress = 42 : proc2memValue;
-			DMAadress = 42 : uart2memValue;
-			TRUE : data[42];
+			proc = write & proc2memAddress = secureAddress: proc2memValue;
+			DMAadress = secureAddress : uart2memValue;
+			TRUE : data[secureAddress];
 		esac;
 MODULE DMA (proc, DMAmemAddress)
 VAR
@@ -111,7 +113,12 @@ VAR
 	uart2memValue);
 	dma : DMA (proc, DMAmemAddress);
 ASSIGN
-	init (memory.data[42]) := 0ud8_42; -- this is the cryptographic key
-LTLSPEC G (proc = setDMAaddress & DMAmemAddress != 42) -> G (memory.data[42] =
-next (memory.data[42]))
+-- prove that secure memory is constant with DMA
+LTLSPEC G (proc = setDMAaddress & DMAmemAddress != memory.secureAddress) -> G (memory.data[memory.secureAddress] =
+next (memory.data[memory.secureAddress]))
+
+
+LTLSPEC G (proc = setDMAaddress & DMAmemAddress = memory.secureAddress) -> G (memory.data[memory.secureAddress] =
+next (memory.data[memory.secureAddress])) -- should be false
+
 	
