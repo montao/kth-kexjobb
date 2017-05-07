@@ -4,7 +4,7 @@ VAR
 	Rx : unsigned word [ 8 ]; -- byte from the outside
 	Tx : array 0 .. 8 of unsigned word [ 8 ]; --array of bytes that is written from the internal memory
 	uart2CPU : unsigned word [ 8 ]; -- the data the UART writes to the CPU
-	uart2mem : unsigned word [ 8 ]; -- the data the UART writes to RAM (no DMA)
+	uart2mem : unsigned word [ 8 ]; -- the data the UART writes to RAM
 	uart2memValue : unsigned word [ 8 ]; -- external		
 ASSIGN
 	next (Tx[0]) :=
@@ -63,6 +63,7 @@ VAR
 MODULE MMU (proc, proc2memValue, pageNumber, proc2memAddress)
 VAR
 	tlb : array 0 .. 32 of unsigned word [ 8 ];
+	--A TLB has a fixed number of slots that contain page table entries, which map virtual addresses to physical addresses. It is typically a content-addressable memory (CAM), in which the search key is the virtual address and the search result is a physical address.
 	mem2read : 0 .. 16; -- if not in tlb
 	mmu2mainValue : array 0 .. 8 of unsigned word [ 8 ];
 ASSIGN
@@ -89,11 +90,14 @@ DEFINE
 VAR
 	data : array 0 .. 16 of unsigned word [ 8 ]; -- main memory
 	mem2proc : unsigned word [ 8 ]; -- if CPU reads a word
+	dataAddress : 0..16;
 ASSIGN
+	next (dataAddress) := mmu.mem2read/2;
+		
 	next (mem2proc) :=
 		case
-			proc = read : data[mmu.mem2read];
-			TRUE : mem2proc;
+			proc = read & mmu.tlb[mmu.mem2read] != 0uo8_0 : mmu.tlb[mmu.mem2read];
+			TRUE : data[dataAddress];
 		esac;
 	next (data[secureAddress]) :=
 		case
@@ -105,20 +109,27 @@ ASSIGN
 			proc = write & mmu.pageNumber = 0 : mmu.tlb[mmu.pageNumber];
 			TRUE : data[secureAddress];
 		esac;
+		
+MODULE CPU
+VAR
+	registers : array 0 .. 32 of unsigned word [64];
+	proc : {idle, read, write, read2UART, write2UART, setDMAaddress};
+
 MODULE main
 VAR
-	proc : {idle, read, write, read2UART, write2UART, setDMAaddress};
+
 	pageNumber : 0 .. 7;
 	proc2UARTAddress : 0 .. 7;
 	proc2memAddress : 0 .. 7; -- the data the CPU writes to memory
 	proc2memValue : unsigned word [ 8 ]; -- the data the CPU writes to memory
-	proc2UARTvalue : unsigned word [ 8 ]; -- the data the CPU writes to the UART	
-	mmu : MMU (proc, proc2memValue, pageNumber, proc2memAddress);
-	memory : MEM (proc, uart2mem, mmu);
-	uart0 : UART (proc, proc2UARTvalue, proc2UARTAddress);
+	proc2UARTvalue : unsigned word [ 8 ]; -- the data the CPU writes to the UART
+	cpu : CPU;	
+	mmu : MMU (cpu.proc, proc2memValue, pageNumber, proc2memAddress);
+	memory : MEM (cpu.proc, uart2mem, mmu);
+	uart0 : UART (cpu.proc, proc2UARTvalue, proc2UARTAddress);
 ASSIGN
 --if we write to the UART then after a while it will appear on Tx
-	LTLSPEC G proc = write2UART & proc2UARTAddress = 0 -> F (next (uart0.Tx[0]) =
+	LTLSPEC G cpu.proc = write2UART & proc2UARTAddress = 0 -> F (next (uart0.Tx[0]) =
 	proc2UARTvalue)
 	-- if we write to the UART but not to the secure memory, then the secure memory is constant
 	LTLSPEC G (pageNumber != memory.secureAddress) -> G
