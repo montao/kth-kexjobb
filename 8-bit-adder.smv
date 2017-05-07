@@ -1,0 +1,68 @@
+
+MODULE bit-adder (in1, in2, cin)
+VAR
+	sum : boolean;
+	cout : boolean;
+ASSIGN
+	next (sum) := (in1 xor in2) xor cin;
+	next (cout) := (in1 & in2) | ((in1 | in2) & cin);
+MODULE adder (in1, in2)
+VAR
+	bit0 : bit-adder (in1[0], in2[0], FALSE);
+	bit1 : bit-adder (in1[1], in2[1], bit0.cout);
+	bit2 : bit-adder (in1[2], in2[2], bit1.cout);
+	bit3 : bit-adder (in1[3], in2[3], bit2.cout);
+	bit4 : bit-adder (in1[4], in2[4], bit3.cout);
+	bit5 : bit-adder (in1[5], in2[5], bit4.cout);
+	bit6 : bit-adder (in1[6], in2[6], bit5.cout);
+	bit7 : bit-adder (in1[7], in2[7], bit6.cout);
+DEFINE
+	sum0 := bit0.sum;
+	sum1 := bit1.sum;
+	sum2 := bit2.sum;
+	sum3 := bit3.sum;
+	sum4 := bit4.sum;
+	sum5 := bit5.sum;
+	sum6 := bit6.sum;
+	sum7 := bit7.sum;	
+	overflow := bit7.cout;
+MODULE main
+VAR
+	in1 : array 0 .. 7 of boolean;
+	in2 : array 0 .. 7 of boolean;
+	a : adder (in1, in2);
+ASSIGN
+	next (in1[0]) := in1[0];
+	next (in1[1]) := in1[1];
+	next (in1[2]) := in1[2];
+	next (in1[3]) := in1[3];
+	
+	next (in1[4]) := in1[4];
+	next (in1[5]) := in1[5];
+	next (in1[6]) := in1[6];
+	next (in1[7]) := in1[7];
+	
+	
+	next (in2[0]) := in2[0];
+	next (in2[1]) := in2[1];
+	next (in2[2]) := in2[2];
+	next (in2[3]) := in2[3];
+	
+	next (in2[4]) := in2[4];
+	next (in2[5]) := in2[5];
+	next (in2[6]) := in2[6];
+	next (in2[7]) := in2[7];
+
+
+DEFINE
+	op1 := toint (in1[0]) + 2 * toint (in1[1]) + 4 * toint (in1[2]) + 8 * toint
+	(in1[3]) + 16 * toint (in1[4]) + 32 * toint (in1[5]) + 64 * toint (in1[6]) + 128 * toint
+	(in1[7]);
+	op2 := toint (in2[0]) + 2 * toint (in2[1]) + 4 * toint (in2[2]) + 8 * toint
+	(in2[3]) + 16* toint (in2[4]) + 32 * toint (in2[5]) + 64 * toint (in2[6]) + 128 * toint
+	(in2[7]);
+	sum := toint (a.sum0) + 2 * toint (a.sum1) + 4 * toint (a.sum2) + 8 * toint
+	(a.sum3) +16 * toint (a.sum4) + 32 * toint (a.sum5) + 64 * toint (a.sum6) + 128 * toint
+	(a.sum7) + 256 * toint (a.overflow);
+	
+	LTLSPEC F op1 + op2 = sum
