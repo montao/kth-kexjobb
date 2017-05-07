@@ -117,7 +117,6 @@ VAR
 
 MODULE main
 VAR
-
 	pageNumber : 0 .. 7;
 	proc2UARTAddress : 0 .. 7;
 	proc2memAddress : 0 .. 7; -- the data the CPU writes to memory
@@ -125,8 +124,8 @@ VAR
 	proc2UARTvalue : unsigned word [ 8 ]; -- the data the CPU writes to the UART
 	cpu : CPU;	
 	mmu : MMU (cpu.proc, proc2memValue, pageNumber, proc2memAddress);
-	memory : MEM (cpu.proc, uart2mem, mmu);
 	uart0 : UART (cpu.proc, proc2UARTvalue, proc2UARTAddress);
+	memory : MEM (cpu.proc, uart0.uart2mem, mmu);
 ASSIGN
 --if we write to the UART then after a while it will appear on Tx
 	LTLSPEC G cpu.proc = write2UART & proc2UARTAddress = 0 -> F (next (uart0.Tx[0]) =
