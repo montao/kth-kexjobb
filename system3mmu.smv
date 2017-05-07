@@ -55,27 +55,40 @@ ASSIGN
 
 		-- memory model
 	-- the secure address is address 513 
-
-MODULE MMU (proc, proc2memValue, proc2memAddress)
+MODULE PTE -- page table entry
 VAR
-	pages : array 0 .. 1023 of 0 .. 8;
+	ptes : array 0 .. 4 of unsigned word [ 8 ]; -- valid, virtual page, modified, protection, page frame
+
+MODULE MMU (proc, proc2memValue, pageNumber, proc2memAddress, mmu2mainValue)
+VAR
+	tlb : array 0 .. 8 of unsigned word [ 8 ];
 	mem2read : 0 .. 8;
-ASSIGN
-	next (pages[0]) :=
+	ASSIGN
+	next (tlb[0]) :=
 		case
-			proc = write : pages[proc2memAddress];
-			TRUE : pages[0];
+			proc = write : tlb[pageNumber];
+			TRUE : tlb[0];
 		esac;
+		
+	next (mmu2mainValue[0]) :=
+		case
+			proc = read & proc2memAddress = 0 | proc2memAddress = 32 & tlb[0] != 0uo8_0: tlb[0];
+			 
+			TRUE : 0uo8_0; -- respond void if data in TLB is void
+		esac;
+	
 	next (mem2read) :=
 		case
-			proc = read : pages[proc2memAddress];
+			proc = read & proc2memAddress = 0 | proc2memAddress = 32 & tlb[0] = 0uo8_0: proc2memAddress;
+			 
 			TRUE : mem2read;
 		esac;
+		
 MODULE MEM (proc,  uart2memValue, mmu)
 DEFINE
 	secureAddress := 7;
 VAR
-	data : array 0 .. 8 of unsigned word [ 8 ];
+	data : array 0 .. 16 of unsigned word [ 8 ];
 	mem2proc : unsigned word [ 8 ];
 ASSIGN
 	next (mem2proc) :=
@@ -85,20 +98,25 @@ ASSIGN
 		esac;
 	next (data[secureAddress]) :=
 		case
-			proc = write & mmu.proc2memAddress = secureAddress : mmu.proc2memValue;
+			proc = write & mmu.pageNumber = secureAddress : mmu.tlb[mmu.pageNumber];
+			TRUE : data[secureAddress];
+		esac;
+	next (data[0]) :=
+		case
+			proc = write & mmu.pageNumber = 0 : mmu.tlb[mmu.pageNumber];
 			TRUE : data[secureAddress];
 		esac;
 MODULE main
 VAR
 	proc : {idle, read, write, read2UART, write2UART, setDMAaddress};
-	-- addresses are array indices
-	proc2memAddress : 0 .. 1023;
-	proc2UARTAddress : 0 .. 1023;
-	-- data is array of words
-	proc2memValue : unsigned word [ 8 ]; -- the data the CPU writes to memory
-	proc2UARTvalue : unsigned word [ 8 ]; -- when the CPU writes to the UART (no DMA)
+	data : array 0 .. 8 of unsigned word [ 8 ];
+	pageNumber : 0 .. 7;
+	proc2UARTAddress : 0 .. 7;
+	proc2memAddress : 0..7; -- the data the CPU writes to memory
 	
-	mmu : MMU (proc, proc2memValue, proc2memAddress);
+	proc2memValue : unsigned word [ 8 ]; -- the data the CPU writes to memory
+	proc2UARTvalue : unsigned word [ 8 ]; -- the data the CPU writes to the UART	
+	mmu : MMU (proc, proc2memValue, pageNumber, proc2memAddress, data);
 	memory : MEM (proc, uart2mem, mmu);
 	uart0 : UART (proc, proc2UARTvalue, proc2UARTAddress);
 ASSIGN
@@ -106,5 +124,5 @@ ASSIGN
 	LTLSPEC G proc = write2UART & proc2UARTAddress = 0 -> F (next (uart0.Tx[0]) =
 	proc2UARTvalue)
 	-- if we write to the UART but not to the secure memory, then the secure memory is constant
-	LTLSPEC G (proc2memAddress != memory.secureAddress) -> G
+	LTLSPEC G (pageNumber != memory.secureAddress) -> G
 	(memory.data[memory.secureAddress] = next (memory.data[memory.secureAddress]))	
