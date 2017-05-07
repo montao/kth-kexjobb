@@ -59,10 +59,11 @@ MODULE PTE -- page table entry
 VAR
 	ptes : array 0 .. 4 of unsigned word [ 8 ]; -- valid, virtual page, modified, protection, page frame
 
-MODULE MMU (proc, proc2memValue, pageNumber, proc2memAddress, mmu2mainValue)
+MODULE MMU (proc, proc2memValue, pageNumber, proc2memAddress)
 VAR
 	tlb : array 0 .. 8 of unsigned word [ 8 ];
 	mem2read : 0 .. 8;
+	mmu2mainValue : array 0 .. 8 of unsigned word [ 8 ];
 	ASSIGN
 	next (tlb[0]) :=
 		case
@@ -109,14 +110,13 @@ ASSIGN
 MODULE main
 VAR
 	proc : {idle, read, write, read2UART, write2UART, setDMAaddress};
-	data : array 0 .. 8 of unsigned word [ 8 ];
 	pageNumber : 0 .. 7;
 	proc2UARTAddress : 0 .. 7;
 	proc2memAddress : 0..7; -- the data the CPU writes to memory
 	
 	proc2memValue : unsigned word [ 8 ]; -- the data the CPU writes to memory
 	proc2UARTvalue : unsigned word [ 8 ]; -- the data the CPU writes to the UART	
-	mmu : MMU (proc, proc2memValue, pageNumber, proc2memAddress, data);
+	mmu : MMU (proc, proc2memValue, pageNumber, proc2memAddress);
 	memory : MEM (proc, uart2mem, mmu);
 	uart0 : UART (proc, proc2UARTvalue, proc2UARTAddress);
 ASSIGN
