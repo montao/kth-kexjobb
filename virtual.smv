@@ -3,23 +3,29 @@
 
 MODULE MMU (proc, pageNumber, offset)
 
-
 VAR
 	pagetable : array 0 .. 7 of 0..3; -- 8 pages of virtual memory points to 4 pages of physical memory
 	tlb : array 0 .. 7 of array 0..4 of 0..3; -- valid, virtual page, modified, protection, page frame number	
-ASSIGN
---init (pagetable[0]) := 2; -- initiate paging between virtual page 0 and physical page 3
-	next (pagetable[0]) := -- page 2. page size 512 byte. first byte. 
+ASSIGN 
+	next (pagetable[0]) := -- initiate paging between virtual page 0 and physical page 2
 		case
 			TRUE : 2;
 		esac;	
-		
+	next (pagetable[2]) := -- initiate paging between virtual page 2 and physical page 0
+		case
+			TRUE : 0;
+		esac;	
+	next (pagetable[1]) := -- initiate paging between virtual page 1 and physical page 1
+		case
+			TRUE : 1;
+		esac;
+			
 MODULE MEM (proc, mmu, proc2memValue)
 DEFINE
 	secureAddress := 3;
 	securePage := 3;
 VAR
-	data : array 0 .. 3 of array 0..3 of unsigned word [ 8 ]; -- 2 KB main memory. 4 page frames. page size 4 that should change to 512 byte
+	data : array 0 .. 3 of array 0..7 of unsigned word [ 8 ]; -- 32 bytes main memory. 4 page frames. page size 8 that should change to 512 byte
 	mem2proc : array 0..3 of unsigned word [ 8 ]; -- if CPU reads a page
 
 ASSIGN	
@@ -31,10 +37,8 @@ ASSIGN
 	init (mmu.tlb[5][0]) := 0;
 	init (mmu.tlb[6][0]) := 0;
 	init (mmu.tlb[7][0]) := 0;
-
-	--init (mmu.pagetable[0]) := 2; -- initiate paging between virtual page 0 and physical page 3
-			
-	next (mem2proc[0]) :=
+		
+	next (mem2proc[0]) := -- TLB is not valid yet
 		case
 			proc = read & mmu.tlb[0][0] = 1 & mmu.tlb[0][1] = mmu.pageNumber : data[mmu.tlb[0][4]][0]; 
 			proc = read & mmu.tlb[1][0] = 1 & mmu.tlb[0][1] = mmu.pageNumber : data[mmu.tlb[1][4]][0]; 
@@ -53,7 +57,7 @@ ASSIGN
 		esac;
 	next (data[0][0]) := -- page 0. page size 512 byte. first byte. 
 		case
-			proc = write & mmu.pageNumber = 3 & mmu.offset = 0 : proc2memValue; -- We verify this occurs
+			proc = write & mmu.pageNumber = 2 & mmu.offset = 0 : proc2memValue; -- We verify this occurs
 			TRUE : data[0][0];
 		esac;
 	next (data[1][0]) := -- page 1. page size 512 byte. first byte. 
@@ -73,27 +77,24 @@ MODULE CPU
 DEFINE
 	pageNumber := 0;
 VAR
-	--registers : array 0 .. 16 of unsigned word [16];
+	registers : array 0 .. 16 of unsigned word [16];
 	proc : {read, write};
 
 MODULE main
 DEFINE
-	pageNumber := 0;
 	offset := 0;
-	proc2memValue := 0uo8_42;
+	proc2memValue := 0ud8_255;
 VAR
-	-- pageNumber : 0 .. 7;
-	-- offset : 0..1;
-	--proc2memValue : unsigned word [ 8 ];
+	pageNumber : 0 .. 2;
+	-- proc2memValue : unsigned word [ 8 ]; FIXME: Why can't this be nondeterministic?
 	cpu : CPU;	
 	mmu : MMU (cpu. proc, pageNumber, offset);
 	memory : MEM (cpu. proc, mmu, proc2memValue);
 ASSIGN
-	--LTLSPEC G (pageNumber != memory.securePage & offset != 0) -> G
-	--(memory.data[memory.secureAddress][0] = next (memory.data[memory.secureAddress][0]))
-	--init(proc2memValue) := 0uo8_42;
-	
-	-- 
--- specification ( G ((cpu.proc = write & offset = 0) & pageNumber = 0) ->  F memory.mem2proc[0] = proc2memValue)  is true
 	init(mmu.pagetable[0]) := 2;
-	LTLSPEC G (cpu.proc = write & pageNumber = 0 & offset = 0) -> F memory.data[mmu.pagetable[0]][0] = proc2memValue;
+	init(mmu.pagetable[1]) := 1;
+	
+	LTLSPEC G (pageNumber != memory.securePage) -> G
+	(memory.data[memory.secureAddress][0] = next (memory.data[memory.secureAddress][0]))
+
+	LTLSPEC G (cpu.proc = write & offset = 0) -> F next(memory.data[mmu.pagetable[pageNumber]][0]) = proc2memValue
