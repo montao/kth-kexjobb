@@ -41,7 +41,7 @@ VAR
 
 MODULE main
 VAR
-	pageNumber : 0 .. 63;
+	pageNumber : 0 .. 3;
 	offset : 0..15;
 	cpu : CPU;	
 	mmu : MMU (cpu.proc, pageNumber, offset);
