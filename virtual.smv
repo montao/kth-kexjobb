@@ -30,7 +30,7 @@ DEFINE
 	secureAddress := 6;
 	securePage := 6;
 VAR
-	data : array 0 .. 7 of array 0..31 of unsigned word [ 4 ]; -- A simple 128-byte address space
+	data : array 0 .. 7 of array 0..3 of unsigned word [ 4 ]; -- A simple 128-byte address space
 
 ASSIGN	
 
@@ -73,27 +73,20 @@ VAR
 	-- registers : array 0 .. 16 of unsigned word [16];
 	proc : {read, write};
     proc2memValue : unsigned word [4];
+ASSIGN	
 
+	next (proc2memValue) := proc2memValue;
+		next (proc) := proc;
 MODULE main
 	
 VAR
 	pageNumber : 0 .. 4; -- we vary the page numbers during the verification	
-	-- in the verification proc2memValue is always a constant 0uo8_42
 	cpu : CPU;	
 	mmu : MMU (cpu.proc, pageNumber, cpu.offset);
 	memory : MEM (cpu.proc, mmu, cpu.proc2memValue);
 ASSIGN	
-	init(mmu.pagetable[0]) := 3;
-	init(mmu.pagetable[1]) := 7;
-	init(mmu.pagetable[2]) := 5;
-	init(mmu.pagetable[3]) := 2;
-	init(mmu.pagetable[4]) := 4;
+	 next (pageNumber) := pageNumber;
 		
-	LTLSPEC G cpu.proc = write & pageNumber = 0 -> next(memory.data[mmu.pagetable[0]][0]) = cpu.proc2memValue
-	LTLSPEC G cpu.proc = write & pageNumber = 1 -> next(memory.data[mmu.pagetable[1]][0]) = cpu.proc2memValue
-	LTLSPEC G cpu.proc = write & pageNumber = 2 -> next(memory.data[mmu.pagetable[2]][0]) = cpu.proc2memValue
-	LTLSPEC G cpu.proc = write & pageNumber = 3 -> next(memory.data[mmu.pagetable[3]][0]) = cpu.proc2memValue
-	LTLSPEC G cpu.proc = write & pageNumber = 4 -> next(memory.data[mmu.pagetable[4]][0]) = cpu.proc2memValue
-	
-	LTLSPEC G mmu.pagetable[pageNumber] != memory.secureAddress -> memory.data[memory.secureAddress][0] = next (memory.data[memory.secureAddress][0])
+	 LTLSPEC G ((cpu.proc = write) -> (next(memory.data[mmu.pagetable[pageNumber]][0]) = cpu.proc2memValue))
+	 LTLSPEC G mmu.pagetable[pageNumber] != memory.secureAddress -> memory.data[memory.secureAddress][0] = next (memory.data[memory.secureAddress][0])
 	
